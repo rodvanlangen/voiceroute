@@ -1,0 +1,19 @@
+{
+  "name": "VoiceRoute",
+  "short_name": "VoiceRoute",
+  "description": "Spreek in — stuur naar Todoist, Outlook, of Gmail",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2563eb",
+  "background_color": "#f1f5f9",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%232563eb'/><text y='140' x='96' font-size='120' text-anchor='middle'>🎤</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
