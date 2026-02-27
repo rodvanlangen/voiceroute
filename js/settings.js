@@ -3,15 +3,9 @@
 const STORAGE_KEY = 'voiceroute_settings';
 
 const DEFAULTS = {
-  appName: 'VoiceRoute',
-  lang: 'nl-NL',
-  webhooks: {
-    todoist: '',
-    'outlook-todo': '',
-    gmail: '',
-    'outlook-mail': '',
-    obsidian: ''
-  }
+  appName:    'VoiceRoute',
+  lang:       'nl-NL',
+  aiWebhook:  ''
 };
 
 function getSettings() {

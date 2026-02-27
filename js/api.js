@@ -1,45 +1,40 @@
-// api.js — stuurt data naar Make.com webhooks
+// api.js — stuurt data naar één centrale AI-webhook (Make.com)
 
 /**
- * Stuurt een POST-request naar de opgegeven webhook URL.
- * Make.com verwerkt de payload en zet hem door naar Todoist, Gmail etc.
+ * Stuurt de gesproken tekst naar de AI-webhook.
+ * Make.com + AI bepaalt zelf de bestemming en actie.
+ * Optioneel: Make.com stuurt JSON terug met { label, color } van de gekozen bestemming.
  */
-async function sendToDestination(route) {
-  const settings = getSettings();
-  const webhookUrl = settings.webhooks[route.dest];
+async function sendToDestination(content) {
+  const settings  = getSettings();
+  const webhookUrl = settings.aiWebhook;
 
   if (!webhookUrl) {
-    throw new Error(`Geen webhook URL ingesteld voor "${route.label}". Ga naar Instellingen.`);
+    throw new Error('Geen AI webhook URL ingesteld. Ga naar Instellingen.');
   }
 
-  const appName = settings.appName || 'VoiceRoute';
-
   const payload = {
-    destination: route.dest,
-    type: route.type,        // 'task' of 'email'
-    content: route.content,
-    appName: appName,
+    content:   content,
+    appName:   settings.appName || 'VoiceRoute',
     timestamp: new Date().toISOString()
   };
 
-  // Voor e-mail: voeg subject toe  (formaat: "[AppNaam] eerste 60 tekens")
-  if (route.type === 'email') {
-    const shortContent = route.content.length > 60
-      ? route.content.substring(0, 60).trimEnd() + '…'
-      : route.content;
-    payload.subject = `[${appName}] ${shortContent}`;
-    payload.body = route.content;
-  }
-
   const response = await fetch(webhookUrl, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body:    JSON.stringify(payload)
   });
 
   if (!response.ok) {
     throw new Error(`Webhook fout: HTTP ${response.status}`);
   }
 
-  return payload;
+  // Make.com kan optioneel terugsturen welke bestemming de AI heeft gekozen:
+  // { "label": "Werk Taken", "color": "#2563eb", "destination": "outlook-todo" }
+  try {
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return {};
+  }
 }

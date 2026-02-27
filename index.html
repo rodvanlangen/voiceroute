@@ -34,74 +34,19 @@
 
     <!-- Status -->
     <div class="status-card" id="status-card">
-      <div id="status-icon" class="status-icon">💬</div>
-      <p id="status-text" class="status-text">Kies een bestemming</p>
+      <div id="status-icon" class="status-icon">🎤</div>
+      <p id="status-text" class="status-text">Tik of houd ingedrukt om in te spreken</p>
     </div>
 
-    <!-- Bestemming iconen -->
-    <div class="dest-icons-card">
-      <h2 class="card-title">Kies bestemming</h2>
-      <div class="dest-icons-row">
-
-        <button class="dest-icon-btn" data-dest="todoist" style="--dest-color:#ef4444" aria-label="Todoist">
-          <span class="dest-icon-circle" style="background:#ef4444">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </span>
-          <span class="dest-icon-label">Todoist</span>
-        </button>
-
-        <button class="dest-icon-btn" data-dest="outlook-todo" style="--dest-color:#2563eb" aria-label="Werk Taken">
-          <span class="dest-icon-circle" style="background:#2563eb">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <polyline points="8 12 11 15 16 9"/>
-            </svg>
-          </span>
-          <span class="dest-icon-label">Werk Taken</span>
-        </button>
-
-        <button class="dest-icon-btn" data-dest="gmail" style="--dest-color:#ea4335" aria-label="Gmail">
-          <span class="dest-icon-circle" style="background:#ea4335">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <polyline points="2 4 12 13 22 4"/>
-            </svg>
-          </span>
-          <span class="dest-icon-label">Gmail</span>
-        </button>
-
-        <button class="dest-icon-btn" data-dest="outlook-mail" style="--dest-color:#0078d4" aria-label="Werk Mail">
-          <span class="dest-icon-circle" style="background:#0078d4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <polyline points="2 4 12 13 22 4"/>
-              <line x1="2" y1="20" x2="9" y2="13"/>
-              <line x1="22" y1="20" x2="15" y2="13"/>
-            </svg>
-          </span>
-          <span class="dest-icon-label">Werk Mail</span>
-        </button>
-
-        <button class="dest-icon-btn" data-dest="obsidian" style="--dest-color:#7c3aed" aria-label="Obsidian">
-          <span class="dest-icon-circle" style="background:#7c3aed">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 22 10 17 22 7 22 2 10"/>
-              <line x1="12" y1="2" x2="12" y2="22"/>
-              <line x1="2" y1="10" x2="22" y2="10"/>
-            </svg>
-          </span>
-          <span class="dest-icon-label">Obsidian</span>
-        </button>
-
-      </div>
+    <!-- AI badge -->
+    <div class="ai-badge-row">
+      <span class="ai-badge">🤖 AI bepaalt de bestemming</span>
     </div>
 
     <!-- Microfoon -->
     <div class="mic-wrapper">
       <div id="pulse-ring" class="pulse-ring hidden"></div>
-      <button id="mic-btn" class="mic-btn" aria-label="Microfoon indrukken om te spreken">
+      <button id="mic-btn" class="mic-btn" aria-label="Houd ingedrukt om te spreken">
         <svg class="mic-svg" viewBox="0 0 24 24" aria-hidden="true">
           <rect x="9" y="2" width="6" height="13" rx="3" fill="currentColor"/>
           <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
@@ -111,9 +56,10 @@
       </button>
     </div>
 
+    <p id="mic-hint" class="mic-hint">Tik = aan/uit &nbsp;·&nbsp; Ingedrukt houden = push-to-talk</p>
+
     <!-- Transcript -->
     <div id="transcript-card" class="transcript-card hidden">
-      <span id="route-badge" class="route-badge hidden"></span>
       <p id="transcript-text" class="transcript-text"></p>
     </div>
 
@@ -149,53 +95,16 @@
     <div class="settings-body">
 
       <div class="settings-section">
-        <label class="settings-label" for="cfg-app-name">App naam (prefix in e-mail onderwerp)</label>
+        <label class="settings-label" for="cfg-app-name">App naam (prefix in berichten)</label>
         <input class="settings-input" id="cfg-app-name" type="text" placeholder="VoiceRoute">
       </div>
 
       <div class="settings-section">
-        <label class="settings-label">
-          <span class="dest-dot sm" style="background:#ef4444"></span>
-          Todoist — Webhook URL
+        <label class="settings-label" for="cfg-ai-webhook">
+          🤖 AI Webhook URL (Make.com)
         </label>
-        <input class="settings-input" id="cfg-todoist" type="url" placeholder="https://hook.eu1.make.com/…">
-        <p class="settings-hint">Maakt een taak aan in je Todoist inbox</p>
-      </div>
-
-      <div class="settings-section">
-        <label class="settings-label">
-          <span class="dest-dot sm" style="background:#2563eb"></span>
-          Werk Taken — Webhook URL
-        </label>
-        <input class="settings-input" id="cfg-outlook-todo" type="url" placeholder="https://hook.eu1.make.com/…">
-        <p class="settings-hint">Maakt een taak aan in Microsoft To Do</p>
-      </div>
-
-      <div class="settings-section">
-        <label class="settings-label">
-          <span class="dest-dot sm" style="background:#ea4335"></span>
-          Gmail — Webhook URL
-        </label>
-        <input class="settings-input" id="cfg-gmail" type="url" placeholder="https://hook.eu1.make.com/…">
-        <p class="settings-hint">Stuurt een e-mail naar jezelf via Gmail</p>
-      </div>
-
-      <div class="settings-section">
-        <label class="settings-label">
-          <span class="dest-dot sm" style="background:#0078d4"></span>
-          Werk Mail — Webhook URL
-        </label>
-        <input class="settings-input" id="cfg-outlook-mail" type="url" placeholder="https://hook.eu1.make.com/…">
-        <p class="settings-hint">Stuurt een e-mail naar jezelf via Outlook</p>
-      </div>
-
-      <div class="settings-section">
-        <label class="settings-label">
-          <span class="dest-dot sm" style="background:#7c3aed"></span>
-          Obsidian — Webhook URL
-        </label>
-        <input class="settings-input" id="cfg-obsidian" type="url" placeholder="https://hook.eu1.make.com/…">
-        <p class="settings-hint">Maakt een notitie aan in je Obsidian vault</p>
+        <input class="settings-input" id="cfg-ai-webhook" type="url" placeholder="https://hook.eu1.make.com/…">
+        <p class="settings-hint">Eén webhook voor alles — de AI bepaalt zelf de bestemming</p>
       </div>
 
       <div class="settings-section">
@@ -210,15 +119,18 @@
       <button id="save-settings" class="btn-primary">Opslaan</button>
 
       <div class="setup-info">
-        <h3>Hoe stel je Make.com in?</h3>
-        <p>Maak een gratis account op <strong>make.com</strong>. Maak voor elke bestemming een scenario:</p>
+        <h3>Hoe stel je Make.com + AI in?</h3>
         <ol>
+          <li>Maak een scenario aan op <strong>make.com</strong></li>
           <li>Voeg een <strong>Webhook → Custom webhook</strong> toe als trigger</li>
           <li>Kopieer de webhook-URL en plak hem hierboven</li>
-          <li>Voeg de juiste actie toe (Todoist, Gmail, Microsoft To Do, Outlook of Obsidian)</li>
+          <li>Voeg een <strong>OpenAI</strong> module toe die de tekst analyseert</li>
+          <li>Laat de AI bepalen: bestemming, type, prioriteit, datum</li>
+          <li>Voeg een <strong>Router</strong> toe die naar de juiste app stuurt</li>
           <li>Activeer het scenario</li>
         </ol>
-        <p>In de actie gebruik je de velden: <code>content</code>, <code>subject</code> (e-mail), <code>appName</code>.</p>
+        <p>De app stuurt: <code>content</code>, <code>appName</code>, <code>timestamp</code>.<br>
+        Make.com kan terugsturen: <code>label</code> en <code>color</code> voor in de geschiedenis.</p>
       </div>
 
     </div>
@@ -227,7 +139,6 @@
 </div>
 
 <script src="js/settings.js"></script>
-<script src="js/router.js"></script>
 <script src="js/api.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/app.js"></script>

@@ -109,6 +109,23 @@ html, body {
   line-height: 1.4;
 }
 
+/* ── AI badge ────────────────────────────────────────────────────────────────── */
+.ai-badge-row {
+  display: flex;
+  justify-content: center;
+}
+
+.ai-badge {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 99px;
+  letter-spacing: .02em;
+  box-shadow: 0 2px 8px rgba(99,102,241,.3);
+}
+
 /* ── Microfoon ───────────────────────────────────────────────────────────────── */
 .mic-wrapper {
   position: relative;
@@ -119,8 +136,8 @@ html, body {
 }
 
 .mic-btn {
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: none;
   background: var(--primary);
@@ -133,6 +150,8 @@ html, body {
   z-index: 1;
   transition: background .2s, transform .1s, box-shadow .2s;
   box-shadow: 0 4px 16px rgba(37,99,235,.4);
+  touch-action: none;
+  user-select: none;
 }
 
 .mic-btn:active { transform: scale(.93); }
@@ -143,16 +162,16 @@ html, body {
 }
 
 .mic-svg {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   pointer-events: none;
 }
 
 /* Pulse ring */
 .pulse-ring {
   position: absolute;
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: 3px solid #dc2626;
   animation: pulse-anim 1.4s infinite ease-out;
@@ -166,28 +185,21 @@ html, body {
   100% { transform: scale(1.9); opacity: 0;  }
 }
 
+/* Mic hint */
+.mic-hint {
+  text-align: center;
+  font-size: .78rem;
+  color: var(--text-muted);
+  margin-top: -8px;
+}
+
 /* ── Transcript card ─────────────────────────────────────────────────────────── */
 .transcript-card {
   background: var(--surface);
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
-
-.route-badge {
-  display: inline-block;
-  color: #fff;
-  font-size: .75rem;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 99px;
-  align-self: flex-start;
-}
-
-.route-badge.hidden { display: none; }
 
 .transcript-text {
   font-size: 1rem;
@@ -212,14 +224,7 @@ html, body {
 .result-card.error   { background: var(--error-bg);   color: var(--error);   }
 .result-card.hidden  { display: none; }
 
-/* ── Bestemming iconen kaart ─────────────────────────────────────────────────── */
-.dest-icons-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow);
-}
-
+/* ── Card title ──────────────────────────────────────────────────────────────── */
 .card-title {
   font-size: .85rem;
   font-weight: 600;
@@ -227,91 +232,6 @@ html, body {
   letter-spacing: .05em;
   color: var(--text-muted);
   margin-bottom: 12px;
-}
-
-.dest-icons-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.dest-icon-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  background: none;
-  border: 2px solid transparent;
-  border-radius: var(--radius-sm);
-  padding: 10px 2px;
-  cursor: pointer;
-  transition: border-color .15s, background .15s, transform .1s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.dest-icon-btn:active { transform: scale(.91); }
-
-.dest-icon-btn.selected {
-  background: var(--bg);
-  border-color: var(--dest-color, var(--primary));
-}
-
-.dest-icon-circle {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: box-shadow .15s, transform .15s;
-  flex-shrink: 0;
-}
-
-.dest-icon-btn.selected .dest-icon-circle {
-  box-shadow: 0 0 0 3px rgba(0,0,0,.12);
-}
-
-.dest-icon-btn.listening .dest-icon-circle {
-  animation: icon-pulse 1.2s infinite ease-in-out;
-}
-
-@keyframes icon-pulse {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.12); }
-}
-
-.dest-icon-circle svg {
-  width: 26px;
-  height: 26px;
-}
-
-.dest-icon-label {
-  font-size: .68rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-align: center;
-  line-height: 1.2;
-}
-
-.dest-icon-btn.selected .dest-icon-label {
-  color: var(--text);
-}
-
-/* Settings dot (klein bolletje naast label) */
-.dest-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.dest-dot.sm {
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 4px;
 }
 
 /* ── Geschiedenis ────────────────────────────────────────────────────────────── */

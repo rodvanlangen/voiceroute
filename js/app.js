@@ -1,4 +1,4 @@
-// app.js — hoofdcontroller: verbindt spraak → router → API → UI
+// app.js — hoofdcontroller: spraak → AI webhook → UI
 
 // ── DOM-elementen ────────────────────────────────────────────────────────────
 const micBtn         = document.getElementById('mic-btn');
@@ -7,11 +7,11 @@ const statusIcon     = document.getElementById('status-icon');
 const statusText     = document.getElementById('status-text');
 const transcriptCard = document.getElementById('transcript-card');
 const transcriptText = document.getElementById('transcript-text');
-const routeBadge     = document.getElementById('route-badge');
 const resultCard     = document.getElementById('result-card');
 const resultIcon     = document.getElementById('result-icon');
 const resultTxt      = document.getElementById('result-text');
 const appTitle       = document.getElementById('app-title');
+const micHint        = document.getElementById('mic-hint');
 
 // Settings panel
 const settingsBtn     = document.getElementById('settings-btn');
@@ -20,53 +20,61 @@ const settingsOverlay = document.getElementById('settings-overlay');
 const settingsClose   = document.getElementById('settings-close');
 const saveSettings_   = document.getElementById('save-settings');
 
-const cfgAppName      = document.getElementById('cfg-app-name');
-const cfgTodoist      = document.getElementById('cfg-todoist');
-const cfgOutlookTodo  = document.getElementById('cfg-outlook-todo');
-const cfgGmail        = document.getElementById('cfg-gmail');
-const cfgOutlookMail  = document.getElementById('cfg-outlook-mail');
-const cfgObsidian     = document.getElementById('cfg-obsidian');
-const cfgLang         = document.getElementById('cfg-lang');
+const cfgAppName    = document.getElementById('cfg-app-name');
+const cfgAiWebhook  = document.getElementById('cfg-ai-webhook');
+const cfgLang       = document.getElementById('cfg-lang');
 
 // History
 const historyList  = document.getElementById('history-list');
 const clearHistory = document.getElementById('clear-history');
 
-// Bestemming iconen
-const destBtns = document.querySelectorAll('.dest-icon-btn');
-
 // ── Toestand ─────────────────────────────────────────────────────────────────
-let voice        = null;
-let settings     = getSettings();
-let selectedDest = null; // ROUTES-entry van gekozen bestemming
+let voice    = null;
+let settings = getSettings();
 
-// ── Bestemming selecteren ─────────────────────────────────────────────────────
-function setSelectedDest(route) {
-  selectedDest = route;
-  destBtns.forEach(btn => {
-    btn.classList.toggle('selected', btn.dataset.dest === route?.dest);
-    btn.classList.remove('listening');
-  });
-}
+// ── Push-to-talk ──────────────────────────────────────────────────────────────
+let holdTimer    = null;
+const HOLD_MS    = 200; // ms ingedrukt houden voor push-to-talk modus
+let pushToTalk   = false;
 
-destBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const route = getRouteByDest(btn.dataset.dest);
-    if (!route) return;
+micBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (!voice) return;
 
-    // Als mic actief is: stop eerst
-    if (voice?.active) {
-      voice.stop();
+  holdTimer = setTimeout(() => {
+    pushToTalk = true;
+    if (!voice.active) {
+      transcriptCard.classList.add('hidden');
+      voice.start(settings.lang);
     }
+  }, HOLD_MS);
+});
 
-    setSelectedDest(route);
-    transcriptCard.classList.add('hidden');
+micBtn.addEventListener('pointerup', () => {
+  clearTimeout(holdTimer);
+  if (pushToTalk) {
+    // Loslaten → stop opname
+    pushToTalk = false;
+    if (voice?.active) voice.stop();
+  } else {
+    // Korte tik → toggle aan/uit
+    if (!voice) return;
+    if (voice.active) {
+      voice.stop();
+      setState('idle');
+    } else {
+      transcriptCard.classList.add('hidden');
+      voice.start(settings.lang);
+    }
+  }
+});
 
-    // Kleine vertraging zodat stop verwerkt is voor we opnieuw starten
-    setTimeout(() => {
-      if (!voice?.active) voice?.start(settings.lang);
-    }, 80);
-  });
+micBtn.addEventListener('pointerleave', () => {
+  clearTimeout(holdTimer);
+  if (pushToTalk) {
+    pushToTalk = false;
+    if (voice?.active) voice.stop();
+  }
 });
 
 // ── Spraakherkenning initialiseren ───────────────────────────────────────────
@@ -77,7 +85,7 @@ function initVoice() {
         setState('listening');
       },
       onInterim(text) {
-        showTranscript(text, selectedDest, true);
+        showTranscript(text, true);
       },
       onFinal(text) {
         handleFinal(text);
@@ -108,22 +116,17 @@ function initVoice() {
 // ── Verwerk definitieve transcriptie ─────────────────────────────────────────
 async function handleFinal(text) {
   setState('processing');
-  showTranscript(text, selectedDest, false);
-
-  // Gebruik geselecteerde bestemming; val terug op trefwoord-detectie als er geen is
-  const route = selectedDest
-    ? { ...selectedDest, content: text }
-    : detectRoute(text);
-
-  if (!route) {
-    setState('error', 'Kies eerst een bestemming (of begin met "todoist", "werk taak" enz.)');
-    return;
-  }
+  showTranscript(text, false);
 
   try {
-    await sendToDestination(route);
-    setState('success', `Verstuurd naar ${route.label} ✓`);
-    addHistory(route);
+    const result = await sendToDestination(text);
+
+    // Make.com kan optioneel terugsturen welke bestemming de AI heeft gekozen
+    const label = result?.label || 'AI';
+    const color = result?.color || '#6366f1';
+
+    setState('success', `Verstuurd via ${label} ✓`);
+    addHistory({ label, color, content: text });
   } catch (e) {
     setState('error', e.message);
   }
@@ -134,43 +137,33 @@ function setState(state, message) {
   micBtn.className = 'mic-btn';
   pulseRing.classList.add('hidden');
   resultCard.classList.add('hidden');
-  destBtns.forEach(btn => btn.classList.remove('listening'));
 
-  const icons = { idle: '💬', listening: '🎤', processing: '⏳', success: '✅', error: '❌' };
+  const icons = {
+    idle:       '🎤',
+    listening:  '🎤',
+    processing: '🤖',
+    success:    '✅',
+    error:      '❌'
+  };
 
   let text;
-  if (state === 'idle') {
-    text = selectedDest
-      ? `Tik op ${selectedDest.label} om opnieuw in te spreken`
-      : 'Kies een bestemming';
-  } else if (state === 'listening') {
-    text = selectedDest
-      ? `Luisteren voor ${selectedDest.label}…`
-      : 'Luisteren… spreek je bericht in';
-  } else if (state === 'processing') {
-    text = 'Verwerken…';
-  } else if (state === 'success') {
-    text = message ?? 'Verstuurd!';
-  } else if (state === 'error') {
-    text = message ?? 'Er ging iets mis';
-  }
+  if      (state === 'idle')       text = 'Tik of houd ingedrukt om in te spreken';
+  else if (state === 'listening')  text = 'Luisteren… laat los of tik om te stoppen';
+  else if (state === 'processing') text = 'AI verwerkt je bericht…';
+  else if (state === 'success')    text = message ?? 'Verstuurd!';
+  else if (state === 'error')      text = message ?? 'Er ging iets mis';
 
-  statusIcon.textContent = icons[state] ?? '💬';
+  statusIcon.textContent = icons[state] ?? '🎤';
   statusText.textContent = text;
 
   if (state === 'listening') {
     micBtn.classList.add('listening');
     pulseRing.classList.remove('hidden');
-    // Laat het geselecteerde icoon pulsen
-    if (selectedDest) {
-      const activeBtn = document.querySelector(`.dest-icon-btn[data-dest="${selectedDest.dest}"]`);
-      activeBtn?.classList.add('listening');
-    }
   }
 
   if (state === 'success' || state === 'error') {
     resultCard.classList.remove('hidden');
-    resultCard.className = `result-card ${state}`;
+    resultCard.className   = `result-card ${state}`;
     resultIcon.textContent = state === 'success' ? '✓' : '✕';
     resultTxt.textContent  = message ?? '';
     setTimeout(() => {
@@ -180,44 +173,19 @@ function setState(state, message) {
   }
 }
 
-function showTranscript(text, route, interim) {
+function showTranscript(text, interim) {
   transcriptCard.classList.remove('hidden');
   transcriptText.textContent = text;
   transcriptText.classList.toggle('interim', interim);
-
-  if (route) {
-    routeBadge.textContent      = route.label;
-    routeBadge.style.background = route.color;
-    routeBadge.classList.remove('hidden');
-  } else {
-    routeBadge.classList.add('hidden');
-  }
 }
 
-// ── Mic-knop (handmatig stoppen / starten) ────────────────────────────────────
-micBtn.addEventListener('click', () => {
-  if (!voice) return;
-  if (voice.active) {
-    voice.stop();
-    setState('idle');
-  } else {
-    if (!selectedDest) {
-      setState('error', 'Kies eerst een bestemming.');
-      return;
-    }
-    transcriptCard.classList.add('hidden');
-    voice.start(settings.lang);
-  }
-});
-
 // ── Geschiedenis ─────────────────────────────────────────────────────────────
-function addHistory(route) {
+function addHistory(item) {
   const history = JSON.parse(localStorage.getItem('voiceroute_history') || '[]');
   history.unshift({
-    dest:    route.dest,
-    label:   route.label,
-    color:   route.color,
-    content: route.content,
+    label:   item.label,
+    color:   item.color,
+    content: item.content,
     time:    new Date().toISOString()
   });
   localStorage.setItem('voiceroute_history', JSON.stringify(history.slice(0, 50)));
@@ -231,7 +199,7 @@ function renderHistory() {
     return;
   }
   historyList.innerHTML = history.map(item => {
-    const d = new Date(item.time);
+    const d    = new Date(item.time);
     const time = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })
                + ' ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     return `
@@ -255,13 +223,9 @@ clearHistory.addEventListener('click', () => {
 // ── Instellingen ─────────────────────────────────────────────────────────────
 function openSettings() {
   settings = getSettings();
-  cfgAppName.value     = settings.appName                        || '';
-  cfgTodoist.value     = settings.webhooks['todoist']            || '';
-  cfgOutlookTodo.value = settings.webhooks['outlook-todo']       || '';
-  cfgGmail.value       = settings.webhooks['gmail']              || '';
-  cfgOutlookMail.value = settings.webhooks['outlook-mail']       || '';
-  cfgObsidian.value    = settings.webhooks['obsidian']           || '';
-  cfgLang.value        = settings.lang                           || 'nl-NL';
+  cfgAppName.value   = settings.appName   || '';
+  cfgAiWebhook.value = settings.aiWebhook || '';
+  cfgLang.value      = settings.lang      || 'nl-NL';
 
   settingsPanel.classList.remove('hidden');
   settingsOverlay.classList.remove('hidden');
@@ -278,15 +242,9 @@ settingsOverlay.addEventListener('click', closeSettings_);
 
 saveSettings_.addEventListener('click', () => {
   settings = {
-    appName: cfgAppName.value.trim() || 'VoiceRoute',
-    lang: cfgLang.value,
-    webhooks: {
-      'todoist':      cfgTodoist.value.trim(),
-      'outlook-todo': cfgOutlookTodo.value.trim(),
-      'gmail':        cfgGmail.value.trim(),
-      'outlook-mail': cfgOutlookMail.value.trim(),
-      'obsidian':     cfgObsidian.value.trim()
-    }
+    appName:   cfgAppName.value.trim() || 'VoiceRoute',
+    lang:      cfgLang.value,
+    aiWebhook: cfgAiWebhook.value.trim()
   };
   saveSettings(settings);
   if (voice) voice.setLang(settings.lang);
@@ -301,10 +259,9 @@ saveSettings_.addEventListener('click', () => {
   initVoice();
   renderHistory();
 
-  // Eerste keer: direct instellingen openen als er geen webhooks zijn
+  // Eerste keer: direct instellingen openen als er geen webhook is
   const s = getSettings();
-  const hasAny = Object.values(s.webhooks).some(v => v);
-  if (!hasAny) {
+  if (!s.aiWebhook) {
     setTimeout(openSettings, 600);
   }
 })();
