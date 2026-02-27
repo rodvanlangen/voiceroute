@@ -1,11 +1,10 @@
 // Service Worker — cache de app-shell voor offline gebruik
-const CACHE = 'voiceroute-v2';
+const CACHE = 'voiceroute-v3';
 const ASSETS = [
   '/',
   '/index.html',
   '/css/style.css',
   '/js/settings.js',
-  '/js/router.js',
   '/js/api.js',
   '/js/voice.js',
   '/js/app.js',
